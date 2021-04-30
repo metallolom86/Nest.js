@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-
 import { Product } from './product.model';
 
 @Injectable()
@@ -15,6 +14,7 @@ export class ProductsService {
       title,
       description: desc,
       price,
+      createdAt: new Date().toLocaleString()
     });
     const result = await newProduct.save();
     return result.id as string;
