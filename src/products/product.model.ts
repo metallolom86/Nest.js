@@ -1,4 +1,4 @@
-import * as mongoose from 'mongoose';
+// import * as mongoose from 'mongoose';
 import {
   MongooseModule,
   Prop,
@@ -6,6 +6,7 @@ import {
   SchemaFactory,
 } from '@nestjs/mongoose';
 import plugins from '../schemas/mongose-plugins';
+import { Document } from 'mongoose';
 
 // export const ProductSchema = new mongoose.Schema({
 //   title: { type: String, required: true },
@@ -13,12 +14,14 @@ import plugins from '../schemas/mongose-plugins';
 //   price: { type: Number, required: true },
 //   createdAt: { type: String, required: true },
 // }, { versionKey: false });
+export type ProductDocument = Product & Document;
 
-export interface Product extends mongoose.Document {
+export interface Product {
   id: string;
   title: string;
   description: string;
-  createdAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   price: number;
 }
 @Schema({

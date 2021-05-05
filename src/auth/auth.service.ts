@@ -1,45 +1,70 @@
 import { Injectable, HttpStatus} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import { NotificationService } from '../notification/notification.service';
+import {
+  ENotificationChannels,
+  INotificationParams,
+} from '../notification/notification.types';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { User, UserDocument } from '../users/user.model';
+
+import { ENotificationTemplates } from '../utils/notification-templates.enum';
+import { ConfirmationRegistrationDto } from '../bull/dto/confirmation-registration.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private notificationService: NotificationService,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
 
-  async validateUser(login: string, password: string): Promise<any> {
-    const user = await this.usersService.getUser(login);
-    const message = 'Incorrect login or password';
-
+  async validateUser(email: string, password: string): Promise<any> {
+    const user = await this.userModel.findOne({ email });
+    const message = 'Incorrect email or password';
     if (user) {
-      const isPasswordValid = await this.usersService.comparePassword(password, user.password)
-      if(isPasswordValid){
+      const isValidPassword = await user.validatePassword(password);
+      if(isValidPassword){
 
-        return this.login(user);
+        return this.getToken(user);
       }
       return { status: HttpStatus.UNAUTHORIZED, message };
     }
     return { status: HttpStatus.UNAUTHORIZED, message };
   }
 
-  async login(user: any) {
-    const payload = { login: user.login, _id: user._id };
+  async getToken(user: any) {
+    const payload = { email: user.email, _id: user._id };
     return {
       access_token: this.jwtService.sign(payload),
     };
   }
 
-  async addOneUser(login: string, pass: string): Promise<any> {
-    const user = await this.usersService.getUser(login);
+  async addOneUser(email: string, pass: string): Promise<any> {
+    const user = await this.userModel.findOne({ email });
     if(user) {
-      const message = 'Login already exist';
+      const message = 'email already exist';
 
       return { status: HttpStatus.UNAUTHORIZED, message };
     }
-    const newUser = await this.usersService.insertUser(login, pass);
-
-    return this.login(newUser);
+    const newUser = await this.usersService.insertUser(email, pass);
+    
+    const token = await this.getToken(newUser)
+    const notificationParams: INotificationParams = {
+      channels: [ENotificationChannels.EMAIL],
+      template: ENotificationTemplates.CONFIRMATION_REGISTRATION,
+    };
+    const notificationPayload: ConfirmationRegistrationDto = {
+      email: email,
+      token: token.access_token,
+    };
+    this.notificationService.sendNotification(
+      notificationParams,
+      notificationPayload,
+    );
+    return token;
   }
 }

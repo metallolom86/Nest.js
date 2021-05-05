@@ -2,28 +2,28 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import { User } from './user.model';
+import { UserDocument } from './user.model';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectModel('User') private readonly userModel: Model<User>,
+    @InjectModel('User') private readonly userModel: Model<UserDocument>,
   ) {}
 
-  async getUser(login: string) {
-    const user = await this.userModel.findOne({login}).lean().exec();
+  async getUser(email: string) {
+    const user = await this.userModel.findOne({email}).lean().exec();
     return user
   }
 
-  async insertUser(login: string, password: string) {
+  async insertUser(email: string, password: string) {
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new this.userModel({
-      login,
+      email,
       password: hashedPassword,
     });
     const result = await newUser.save();
-    return result as User;
+    return result as UserDocument;
   }
 
   async comparePassword(attempt: string, password: string): Promise<boolean> {
