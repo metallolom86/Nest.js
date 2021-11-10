@@ -1,12 +1,8 @@
-import { createParamDecorator } from '@nestjs/common';
-import { UserDocument } from '../../users/user.model';
-
-export type TReturnedUserType =
-  | UserDocument
-
+import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { TUserDocument } from '../../schemas/user.model';
 
 export const GetUser = createParamDecorator(
-  (_, ctx): TReturnedUserType => {
+  (_, ctx: ExecutionContext): TUserDocument => {
     const request = ctx.switchToHttp().getRequest();
     return request.user;
   },

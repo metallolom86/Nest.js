@@ -3,18 +3,17 @@ import { Request, Response } from 'express';
 import { UnauthorizedException } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 
-const whiteList = ['/auth/login', '/auth/register']
+const whiteList = ['/auth/login', '/auth/register'];
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
-
-  use(req: Request, res: Response, next: Function) {
+  use(req: Request, res: Response, next) {
     const authHeaders = req.headers.authorization;
-    if ( req.method === "GET") {
+    if (req.method === 'GET') {
       next();
       return;
     }
-    if(whiteList.includes(req.baseUrl)){
+    if (whiteList.includes(req.baseUrl)) {
       next();
       return;
     }
@@ -27,7 +26,6 @@ export class LoggerMiddleware implements NestMiddleware {
         throw new UnauthorizedException();
       }
       next();
-
     } else {
       throw new UnauthorizedException();
     }

@@ -5,4 +5,5 @@ export default {
   product: 'prd::',
   passwordReset: 'pwr::',
   verify: 'vrf::',
+  car: 'car::'
 };

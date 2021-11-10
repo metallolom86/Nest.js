@@ -1,37 +1,25 @@
-// import * as mongoose from 'mongoose';
-
-// export const UserSchema = new mongoose.Schema({
-//   email: { type: String, required: true },
-//   password: { type: String, required: true },
-// }, { versionKey: false });
-
-// export interface User extends mongoose.Document {
-//   id: string;
-//   email: string;
-//   password: string;
-// }
-
 import { Prop, Schema, SchemaFactory, MongooseModule } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import plugins from '../schemas/mongose-plugins';
+import plugins from './mongose-plugins';
+import { Product, IViewProduct, ProductSchema } from './product.model';
 import * as bcrypt from 'bcrypt';
+import { Car, CarSchema } from './car.model';
 
-export type UserDocument = User & Document;
+export type TUserDocument = User & Document;
 
-export enum UserRole {
-  USER = 'USER',
-  ADMIN = 'ADMIN',
+export enum UserRoles {
+  user = 'user',
+  admin = 'admin',
 }
 
-export const availableAdminStatuses = [
-  UserRole.ADMIN,
-  UserRole.USER,
-];
+export const availableAdminStatuses = [UserRoles.admin, UserRoles.user];
 
 export interface IViewUser {
   id: string;
-  role: UserRole[];
+  role: UserRoles[];
   email: string;
+  product?: null | Product;
+  cars?: [] | string[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -52,11 +40,21 @@ export class User {
   @Prop({ type: String, trim: true })
   password: string;
 
-  @Prop({ required: true, default: [UserRole.USER], type: Array })
-  role: UserRole[];
+  @Prop({ type: String, ref: 'Product', required: false })
+  product: Product;
+
+  @Prop({ type: [String], ref: Car.name, default: [], required: false })
+  cars: string[];
+
+  @Prop({ required: true, default: [UserRoles.user], type: Array })
+  role: UserRoles[];
 
   view: () => IViewUser;
   validatePassword: (s: string) => Promise<boolean>;
+
+  createdAt: string;
+
+  updatedAt: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
@@ -68,17 +66,20 @@ export const CustomUserModule = MongooseModule.forFeatureAsync([
       const schema = UserSchema;
 
       schema.plugin(plugins.common, { prefix: plugins.prefixes.user });
-      schema.methods.view = function (): IViewUser {
+      schema.methods.view = function(this: TUserDocument): IViewUser {
         return {
-          id: this.id,
+          id: this._id,
           email: this.email,
           role: this.role,
+          product: this.product,
+          cars: this.cars,
           createdAt: this.createdAt,
           updatedAt: this.updatedAt,
         };
       };
 
-      schema.methods.validatePassword = async function (
+      schema.methods.validatePassword = async function(
+        this: TUserDocument,
         password: string,
       ): Promise<boolean> {
         const isValid = await bcrypt.compare(password, this.password);

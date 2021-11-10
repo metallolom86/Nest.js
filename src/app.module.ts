@@ -9,6 +9,7 @@ import { LoggerMiddleware } from './middleware/middleware';
 import { ConfigModule } from '@nestjs/config';
 import { mongooseConfig } from './config/mongoose.config';
 import { NotificationModule } from './notification/notification.module';
+import { CarModule } from './car/car.module';
 
 @Module({
   imports: [
@@ -20,7 +21,8 @@ import { NotificationModule } from './notification/notification.module';
       envFilePath: ['.env'],
       isGlobal: true,
     }),
-    NotificationModule
+    NotificationModule,
+    CarModule
     ],
   controllers: [AppController],
   providers: [AppService],
