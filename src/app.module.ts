@@ -10,6 +10,7 @@ import { ConfigModule } from '@nestjs/config';
 import { mongooseConfig } from './config/mongoose.config';
 import { NotificationModule } from './notification/notification.module';
 import { CarModule } from './car/car.module';
+import { MotorModule } from './motor/motor.module';
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { CarModule } from './car/car.module';
       isGlobal: true,
     }),
     NotificationModule,
-    CarModule
+    CarModule,
+    MotorModule
     ],
   controllers: [AppController],
   providers: [AppService],

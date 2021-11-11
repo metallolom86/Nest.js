@@ -1,9 +1,9 @@
-import { IsDefined, IsArray } from 'class-validator';
+import { IsDefined, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCarDto {
   @ApiProperty()
   @IsDefined()
-  @IsArray()
-  name: string;
+  @IsString()
+  brand: string;
 }

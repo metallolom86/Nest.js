@@ -2,13 +2,15 @@
 import { MongooseModule, Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import plugins from './mongose-plugins';
 import { Document } from 'mongoose';
-import { IViewUser, TUserDocument, User } from './user.model';
+import { IViewUser } from './user.model';
+import { Motor } from './motor.model';
 
 export type TCarDocument = Car & Document;
 
 export interface IViewCar {
   id: string;
-  name: string;
+  brand: string;
+  motors: [] | string[];
   createdAt?: string;
   updatedAt?: string;
   owner?: IViewUser;
@@ -24,10 +26,13 @@ export interface IViewCar {
 })
 export class Car {
   @Prop({ type: String, trim: true })
-  name: string;
+  brand: string;
 
   @Prop({ type: String, ref: 'User', required: true })
   owner: IViewUser;
+
+  @Prop({ type: [String], ref: 'Motor', default: [], required: true })
+  motors: string[];
 
   view: () => IViewCar;
 
@@ -48,7 +53,8 @@ export const CustomCarModule = MongooseModule.forFeatureAsync([
       schema.methods.view = function(this: TCarDocument): IViewCar {
         return {
           id: this._id,
-          name: this.name,
+          brand: this.brand,
+          motors: this.motors,
           owner: this.owner,
           createdAt: this.createdAt,
           updatedAt: this.updatedAt,
