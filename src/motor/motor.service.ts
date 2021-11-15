@@ -20,11 +20,17 @@ export class MotorService {
     return motors.map(e => e.view());
   }
 
-  private async updateCars(cars: string[]) {
+  private async updateCars(cars: string[], motorId: string) {
     const motors = await this.carModel.find({ cars: cars });
     await this.carModel.updateMany(
       { _id: { $in: cars } },
       { $push: { motors: motors.map(el => el._id) } },
+      { new: true, useFindAndModify: false },
+    );
+
+    await this.carModel.updateMany(
+      { _id: { $nin: cars } },
+      { $pull: { motors: motorId } },
       { new: true, useFindAndModify: false },
     );
   }
@@ -42,7 +48,13 @@ export class MotorService {
       ...createMotorDto,
     }).save();
 
-    await this.updateCars(newMotor.cars);
+    if(newMotor.cars?.length) {
+      await this.carModel.updateMany(
+        { _id: { $in: createMotorDto.cars } },
+        { $push: { motors: newMotor.id } },
+        { new: true, useFindAndModify: false },
+      );
+    }
 
     return { motor: newMotor.view() };
   }
@@ -53,7 +65,7 @@ export class MotorService {
   ): Promise<{ motor: IViewMotor }> {
     const motor = await this.getMotorById(id);
     const updatedMotor = await Object.assign(motor, updateMotorDto).save();
-    await this.updateCars(updatedMotor.cars);
+    await this.updateCars(updatedMotor.cars, motor.id);
     return { motor: updatedMotor.view() };
   }
 

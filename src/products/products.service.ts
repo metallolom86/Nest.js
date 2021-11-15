@@ -19,18 +19,28 @@ export class ProductsService {
       owner: user,
     }).save();
 
+    const products = await this.productModel.find({ owner: user.id });
+    if(products.length > 1) {
+      products.forEach(async (el) => {
+        if(el.id !== newProduct.id) {
+          el.owner = null;
+          await el.save()
+        }
+      })
+    }
+
     return { product: newProduct };
   }
 
   async getProducts() {
     const products = await this.productModel.find().populate('owner');
-    return products.map((e) => e.view());
+    return products.map(e => e.view());
   }
 
   async getSingleProduct(productId: string) {
     const product = await this.productModel
       .findById(productId)
-      .populate('owner');
+      .populate('owner', '-password');
     return product;
   }
 
@@ -58,7 +68,6 @@ export class ProductsService {
     try {
       const product = await this.getSingleProduct(id);
       product.remove();
-
     } catch (error) {
       throw new NotFoundException('Could not find product.');
     }
